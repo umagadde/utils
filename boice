@@ -1,0 +1,208 @@
+// import React, { useState,useRef } from 'react';
+// import './ChatInput.css';
+
+// const ChatInput = ({ onSend, disabled }) => {
+//   const [input, setInput] = useState('');
+
+//   const [listening, setListening] = useState(false);
+//   const recognitionRef = useRef(null);
+
+//   // Start or stop voice recognition
+//   const handleMicClick = () => {
+//     if (!('webkitSpeechRecognition' in window)) {
+//       alert('Speech recognition not supported in this browser.');
+//       return;
+//     }
+//     if (!listening) {
+//       const recognition = new window.webkitSpeechRecognition();
+//       recognition.lang = 'en-US';
+//       recognition.interimResults = false;
+//       recognition.maxAlternatives = 1;
+//       recognition.onresult = (event) => {
+//         const transcript = event.results[0][0].transcript;
+//         setInput(transcript);
+//         setListening(false);
+//       };
+//       recognition.onerror = () => setListening(false);
+//       recognition.onend = () => setListening(false);
+//       recognition.start();
+//       recognitionRef.current = recognition;
+//       setListening(true);
+//     } else {
+//       recognitionRef.current && recognitionRef.current.stop();
+//       setListening(false);
+//     }
+//   };
+
+//   const handleChange = (e) => setInput(e.target.value);
+
+//   const handleSend = (e) => {
+//     e.preventDefault();
+//     if (input.trim()) {
+//       onSend(input);
+//       setInput('');
+//     }
+//   };
+
+//   return (
+//     <form className="chat-input-form" onSubmit={handleSend}>
+//       <input
+//         type="text"
+//         className="chat-input"
+//         placeholder="Type your message..."
+//         value={input}
+//         onChange={(e) => setInput(e.target.value)}
+//         disabled={disabled}
+//         autoFocus
+//       />
+//       <button
+//         type="button"
+//         className={`mic-btn${listening ? ' listening' : ''}`}
+//         onClick={handleMicClick}
+//         disabled={disabled}
+//         aria-label={listening ? 'Stop listening' : 'Start voice input'}
+//       >
+//         {/* {listening ? '🎤' : '🎙️'} */}
+//         {listening ? (
+//                   <svg width="30" height="30" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+//           <circle
+//             cx="25"
+//             cy="25"
+//             r="20"
+//             fill="none"
+//             stroke="#e53935"
+//             stroke-width="5"
+//             stroke-linecap="round"
+//             stroke-dasharray="90"
+//             stroke-dashoffset="60">
+//             <animateTransform
+//               attributeName="transform"
+//               type="rotate"
+//               from="0 25 25"
+//               to="360 25 25"
+//               dur="1s"
+//               repeatCount="indefinite" />
+//           </circle>
+//         </svg>    
+//         ) : '🎙️'}
+//       </button>
+//       <button
+//         type="submit"
+//         className="send-btn"
+//         disabled={disabled || !input.trim()}
+//         aria-label="Send"
+//       >
+//         ➤
+//       </button>
+//     </form>
+//   );
+// };
+
+// export default ChatInput;
+
+
+
+
+import React, { useState, useRef } from 'react';
+import './ChatInput.css';
+
+const ChatInput = ({ onSend, disabled }) => {
+  const [input, setInput] = useState('');
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  // Start or stop voice recognition
+  const handleMicClick = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert('Speech recognition not supported in this browser.');
+      return;
+    }
+    if (!listening) {
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setListening(false);
+      };
+      recognition.onerror = () => setListening(false);
+      recognition.onend = () => setListening(false);
+      recognition.start();
+      recognitionRef.current = recognition;
+      setListening(true);
+    } else {
+      recognitionRef.current && recognitionRef.current.stop();
+      setListening(false);
+    }
+  };
+
+  const handleChange = (e) => setInput(e.target.value);
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (input.trim()) {
+      onSend(input);
+      setInput('');
+    }
+  };
+
+  return (
+    <form className="chat-input-form" onSubmit={handleSend}>
+      <input
+        type="text"
+        className="chat-input"
+        placeholder="Type your message..."
+        value={input}
+        onChange={handleChange}
+        disabled={disabled}
+        autoFocus
+      />
+      <button
+        type="button"
+        className="mic-btn"
+        onClick={handleMicClick}
+        disabled={disabled}
+        aria-label={listening ? 'Stop listening' : 'Start voice input'}
+      >
+        {listening ? (
+          // Spinner SVG (Perplexity-style)
+          <span className="spinner" />
+        ) : (
+          // Mic SVG or emoji
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"   // You can change this to 20, 22, etc. for even smaller
+            height="19"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="#6366f1"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ display: 'block' }}
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M9 2a3 3 0 0 1 6 0v5a3 3 0 0 1 -6 0z" />
+            <path d="M5 10a7 7 0 0 0 14 0" />
+            <path d="M8 21h8" />
+            <path d="M12 17v4" />
+          </svg>
+
+          
+        )}
+      </button>
+      <button
+        type="submit"
+        className="send-btn"
+        disabled={disabled || !input.trim()}
+        aria-label="Send"
+      >
+        ➤
+      </button>
+    </form>
+  );
+};
+
+export default ChatInput;
