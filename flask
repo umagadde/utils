@@ -1,0 +1,95 @@
+from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
+import SprintSummary
+import datetime
+
+app = FastAPI()
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Route: Serve HTML
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    with open("index.html", "r") as file:
+        html_content = file.read()
+    return HTMLResponse(content=html_content)
+
+# Route: Dummy test POST
+@app.post("/test")
+async def handle_post(data: dict):
+    return {"data": data}
+
+# Route: Sprint Summary
+@app.post("/SprintSummary")
+async def sprint_summary(request: Request):
+    try:
+        form = await request.form()
+        board_id = form.get("board_id")
+        sprint_id = form.get("sprint_id")
+
+        if not board_id or not sprint_id:
+            raise HTTPException(status_code=400, detail="No data provided")
+
+        issues = SprintSummary.process_sprint(board_id, sprint_id)
+        board_metrics, team_summary = SprintSummary.calculate_metrics(sprint_id)
+
+        context = {
+            "board_metrics": board_metrics,
+            "team_summary": team_summary,
+            "issues_list": issues
+        }
+
+        # Assume this is where you generate the AI response
+        response = SprintSummary.chat_completion(context)
+
+        # Extract and merge insights
+        board_metrics["areas_of_improvement"] = response.get("board_summary", {}).get("areas_of_improvement")
+        board_metrics["insights"] = response.get("board_summary", {}).get("insights")
+
+        team_metrics = []
+        llm_dict = {member["name"]: member for member in response.get("team_summary", [])}
+
+        for member in team_summary:
+            name = member["name"]
+            if name in llm_dict:
+                merged_member = {**member, **llm_dict[name]}
+                team_metrics.append(merged_member)
+
+        result = {
+            "board_summary": board_metrics,
+            "team_summary": team_metrics
+        }
+
+        return JSONResponse(content={"message": "SprintSummary executed successfully", "result": result})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route: Get sprints by board and year
+@app.post("/sprints")
+async def get_sprints(request: Request):
+    try:
+        payload = await request.json()
+        board_id = payload.get("board_id")
+        year = payload.get("year") or datetime.datetime.now().year
+
+        if not board_id:
+            raise HTTPException(status_code=400, detail="Must provide board_id")
+
+        sprints = SprintSummary.get_sprint_ids_by_year(int(board_id), int(year))
+        return {
+            "board_id": board_id,
+            "year": year,
+            "sprint_ids": sprints
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
