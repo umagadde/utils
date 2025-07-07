@@ -121,3 +121,22 @@ df = pd.DataFrame(data)
 # Save to CSV
 df.to_csv("new_custom.csv", index=False)
 
+
+
+
+
+
+
+try:
+                start_dt = datetime.strptime(row["sprint_start_date"].split("T")[0],
+                                             "%Y-%m-%d")
+                end_dt   = datetime.strptime(row["sprint_end_date"].split("T")[0],
+                                             "%Y-%m-%d")
+
+                # window_start / window_end are already datetime objects
+                if end_dt < window_start or start_dt > window_end:
+                    continue    # ➜ ignore this issue, don’t write the row
+
+            except (KeyError, ValueError):
+                # missing or malformed dates → treat as outside the window
+                continue
